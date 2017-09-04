@@ -12,10 +12,14 @@ import nltk;
 
 source = "inputs/bigquery_10.json"
 bool_remove_stopwords = False;
+pos_tagged_words = True;
+if(pos_tagged_words == True):
+    embeddings.init("sense2vec");
+else:
+    embeddings.init("word2vec");
 
 
-
-#similarity = embeddings.similarity_between_words("apple", "art");
+#similarity = embeddings.similarity("apple", "art");
 #print(similarity);
 
 
@@ -106,7 +110,7 @@ def calculate_consecutive_word_similarities_in_word_list(words):
     word_pairs = [];
     for word in words:
         if(prior_word != False):
-            similarities.append(embeddings.similarity_between_words(prior_word, word));
+            similarities.append(embeddings.similarity(prior_word, word));
             word_pairs.append((prior_word + "," + word).ljust(18));
         prior_word = word;
     return [similarities, word_pairs];
@@ -132,14 +136,15 @@ def demonstrate_sentence_similarities(sentence):
 #exit();
 
 
-## start calculating similarities
-
-
-all_similarities = [];
-f = open(source, 'r');
-for index, line in enumerate(f.readlines()):
-    #(index < 6): continue;  ## skip first x documents
-        
+def convert_doc_to_text(source):
+    f = open(source, 'r');
+    text = [];
+    for index, line in enumerate(f.readlines()):
+        (index > 100): break;  
+        text.append(line);
+    text = "\n".join(text);
+    f.close();
+def calculate_similarities_for_text(input_text):
     similarities = dict({
         "_meta" : dict({
             "index" : index, 
@@ -151,13 +156,18 @@ for index, line in enumerate(f.readlines()):
         "colon" : [],
     })
     
-    ## convert line into json
-    json_data = line; 
-    d = json.loads(json_data)
     
     ## get sentences 
-    sentences = find_sentences_by_spliting_periods_plus_heuristics(d["BookMeta_FullText"]);
-    comma_fragments = split_sentences_by_delimeter(",", sentences);
+    if(pos_tagged_words == False):
+        # use a heuristic to avoid poor segmentation
+        sentences = find_sentences_by_spliting_periods_plus_heuristics(input_text);
+    else:
+        split_sentences_by_delimeter(comma_delimeter, [input_text]);
+        
+    ## Get comma delimited fragments in sentences
+    comma_delimeter = ",";
+    if(pos_tagged_words == True): comma_delimeter += "|PUNCT";
+    comma_fragments = split_sentences_by_delimeter(comma_delimeter, sentences);
     
     #print(json.dumps(sentences, indent=2));
     #print(json.dumps(comma_fragments, indent=2));
@@ -179,7 +189,7 @@ for index, line in enumerate(f.readlines()):
     previous_word = False;
     for word in all_words_in_order:
         if(previous_word != False):
-            this_similarity = embeddings.similarity_between_words(previous_word, word);
+            this_similarity = embeddings.similarity(previous_word, word);
             # print(previous_word + " dot " + word + " = " + str(this_similarity));
             if(this_similarity != False): similarities["consecutive"].append(this_similarity);
         previous_word = word;
@@ -192,25 +202,36 @@ for index, line in enumerate(f.readlines()):
 
     period_borders = get_border_words_from_segments(sentences);
     for border_set in period_borders:
-        this_similarity = embeddings.similarity_between_words(border_set[2], border_set[3]);
+        this_similarity = embeddings.similarity(border_set[2], border_set[3]);
         if(this_similarity != False): similarities["period"].append(this_similarity);
     
     comma_borders = get_border_words_from_segments(comma_fragments);
     for border_set in comma_borders:
-        this_similarity = embeddings.similarity_between_words(border_set[2], border_set[3]);
+        this_similarity = embeddings.similarity(border_set[2], border_set[3]);
         if(this_similarity != False): similarities["comma"].append(this_similarity);
     
     
-    
-    ################################
-    ## Append to all_similarities
-    ################################
-    all_similarities.append(similarities);
-    ## break - for dev mode
-    #if(len(all_similarities) >= 2): break;
+    return similarities;
     
 ## statistically assess similarities
 ## include mean and stdev
+
+
+
+
+
+###################################################
+## start calculating similarities
+###################################################
+all_similarities = [];
+input_text = convert_doc_to_text(source);
+all_similarities.append(calculate_similarities_for_text(input_text));
+
+
+
+###################################################
+## calculate statistics from similarities
+###################################################
 all_statistics = [];
 for similarities in all_similarities:
     statistics = dict();
@@ -231,7 +252,9 @@ print json.dumps(all_statistics, indent=2)
     
 print ("Words not found = " + str(len(embeddings.not_found_list)))    
     
+###################################################
 ## plot histograms of data
+###################################################
 fig, ax = plt.subplots(nrows=1, ncols=len(all_similarities))
 for index in range(len(all_similarities)):
     similarities = all_similarities[index];

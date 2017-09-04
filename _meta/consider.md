@@ -5,3 +5,7 @@ assessing wordchoice based no on consecutive words but on sentence fragments
 -- e.g., verbs act on nouns
 --       nouns described by adjectives
 --       meaning of prepositional phrase (noun) "Every prepositional phrase is a series of words made up of a preposition and its object. The object may be a noun, pronoun, gerund or clause. A prepositional phrase functions as an adjective or adverb"
+
+
+
+http://textminingonline.com/training-word2vec-model-on-english-wikipedia-by-gensim
