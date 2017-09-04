@@ -9,10 +9,13 @@ import json;
 import nltk;
 
 
-
-source = "inputs/bigquery_10.json"
+input_mod = "flower";
+#source = "inputs/flower."+input_mod+".txt"
+source = "inputs/"+input_mod+".txt";
 bool_remove_stopwords = False;
-pos_tagged_words = True;
+
+
+pos_tagged_words = False;
 if(pos_tagged_words == True):
     embeddings.init("sense2vec");
 else:
@@ -40,6 +43,7 @@ def split_sentences_by_delimeter(delimeter, sentences):
         fragments.extend(sentence.split(delimeter));
     return fragments;
 def find_sentences_by_spliting_periods_plus_heuristics(text):
+    print(text);
     ## replace Mr. Mrs. Ms. Dr. w/ Mr_, Mrs_, Ms_, Dr_
     replacements = [
         ["Mr.", "Mr_"],
@@ -88,6 +92,11 @@ def find_sentences_by_spliting_periods_plus_heuristics(text):
         
     return final_sentences;
 
+def smart_split(sentence):
+        sentence_parts = sentence.split(" ");
+        sentence_parts = [x for x in sentence_parts if x != '' and x !='\n'];
+        return sentence_parts;
+    
 def get_border_words_from_segments(sentences):
     
     ## grab the 6 words (3 left of, 3 right of) the period
@@ -96,8 +105,8 @@ def get_border_words_from_segments(sentences):
     for sentence in sentences:
         this_sentence_border = [];
         if(last_sentence != False):
-            this_sentence_border.extend(last_sentence.split(" ")[-3:]);
-        this_sentence_border.extend(sentence.split(" ")[:3]);
+            this_sentence_border.extend(smart_split(last_sentence)[-3:]);
+        this_sentence_border.extend(smart_split(sentence)[:3]);
         if(len(this_sentence_border) == 6): sentence_borders.append(this_sentence_border);
         last_sentence = sentence;
     
@@ -140,14 +149,15 @@ def convert_doc_to_text(source):
     f = open(source, 'r');
     text = [];
     for index, line in enumerate(f.readlines()):
-        (index > 100): break;  
+        #if (index > 100): break;  
         text.append(line);
-    text = "\n".join(text);
+    text = " ".join(text);
     f.close();
+    return text;
 def calculate_similarities_for_text(input_text):
     similarities = dict({
         "_meta" : dict({
-            "index" : index, 
+            "index" : 0, 
         }),
         "consecutive" : [],
         "period" : [],
@@ -162,12 +172,14 @@ def calculate_similarities_for_text(input_text):
         # use a heuristic to avoid poor segmentation
         sentences = find_sentences_by_spliting_periods_plus_heuristics(input_text);
     else:
-        split_sentences_by_delimeter(comma_delimeter, [input_text]);
+        sentences = split_sentences_by_delimeter(".|PUNCT", [input_text]);
         
     ## Get comma delimited fragments in sentences
-    comma_delimeter = ",";
-    if(pos_tagged_words == True): comma_delimeter += "|PUNCT";
-    comma_fragments = split_sentences_by_delimeter(comma_delimeter, sentences);
+    if(pos_tagged_words == True): 
+        comma_fragments = split_sentences_by_delimeter(",|PUNCT", sentences);
+    else:
+        comma_fragments = split_sentences_by_delimeter(",", sentences);
+        
     
     #print(json.dumps(sentences, indent=2));
     #print(json.dumps(comma_fragments, indent=2));
@@ -178,30 +190,34 @@ def calculate_similarities_for_text(input_text):
     ################################
     ## General Similarities
     ################################
-    print("Calculating consecutive...");
-    all_words_in_order = [];
-    for sentence in sentences: 
-        all_words_in_order.extend([word for word in sentence.split(" ")]);
-        all_words_in_order.append("$PURPOSEFULL-SKIP-KEY$"); ## deliminate sentences
-        all_words_in_order.append("$PURPOSEFULL-SKIP-KEY$"); ## deliminate sentences
-    ##print(all_words_in_order);
-    ##print(len(all_words_in_order))
-    previous_word = False;
-    for word in all_words_in_order:
-        if(previous_word != False):
-            this_similarity = embeddings.similarity(previous_word, word);
-            # print(previous_word + " dot " + word + " = " + str(this_similarity));
-            if(this_similarity != False): similarities["consecutive"].append(this_similarity);
-        previous_word = word;
-    
+    if(True):
+        print("Calculating consecutive...");
+        all_words_in_order = [];
+        for sentence in sentences: 
+            all_words_in_order.extend([word for word in sentence.split(" ")]);
+            all_words_in_order.append("$PURPOSEFULL-SKIP-KEY$"); ## deliminate sentences
+            all_words_in_order.append("$PURPOSEFULL-SKIP-KEY$"); ## deliminate sentences
+        ##print(all_words_in_order);
+        ##print(len(all_words_in_order))
+        previous_word = False;
+        for word in all_words_in_order:
+            if(previous_word != False):
+                this_similarity = embeddings.similarity(previous_word, word);
+                # print(previous_word + " dot " + word + " = " + str(this_similarity));
+                if(this_similarity != False): similarities["consecutive"].append(this_similarity);
+            previous_word = word;
+
         
     ################################
     ## Border Statistics
     ################################
     print("Calculating borderwords...");
 
+    print(sentences[0]);
+    print(sentences[1]);
+    print(sentences[2]);
     period_borders = get_border_words_from_segments(sentences);
-    for border_set in period_borders:
+    for index, border_set in enumerate(period_borders):
         this_similarity = embeddings.similarity(border_set[2], border_set[3]);
         if(this_similarity != False): similarities["period"].append(this_similarity);
     
@@ -250,7 +266,7 @@ for similarities in all_similarities:
     all_statistics.append(statistics);
 print json.dumps(all_statistics, indent=2)
     
-print ("Words not found = " + str(len(embeddings.not_found_list)))    
+print ("Words not found = " + str(len(embeddings.retreive_not_found())))    
     
 ###################################################
 ## plot histograms of data
@@ -260,7 +276,8 @@ for index in range(len(all_similarities)):
     similarities = all_similarities[index];
     statistics = all_statistics[index];
     metrics = (statistics.keys())
-    this_axis = ax[index];
+    this_axis = ax;
+    if(len(all_similarities) > 1): this_axis = ax[index];
 
     data_list = [];
     weights = [];
@@ -276,7 +293,7 @@ for index in range(len(all_similarities)):
     
     single_fig, single_ax = plt.subplots()
     # the histogram of the data
-    colors = ['green', 'purple', 'lightblue'];
+    colors = ['green', '#dbf8ff', 'white'];
     colors = colors[:len(metrics)];
     n, bins, patches = single_ax.hist(data_list, num_bins, color=colors, weights=weights, label=labels)
     single_ax.legend(prop={'size': 10})
@@ -285,7 +302,8 @@ for index in range(len(all_similarities)):
     
     
     single_fig.tight_layout();
-    single_fig.savefig("results/figure_"+str(index)+".png"); 
+    file_name = input_mod;
+    single_fig.savefig("results/"+file_name+"_"+str(index)+".png"); 
 
 # Tweak spacing to prevent clipping of ylabel
 #fig.tight_layout()

@@ -57,7 +57,7 @@ LABELS = {
 def load_and_transform(batch_id, in_loc, out_dir):
     
     
-    out_loc = path.join(out_dir, '%d.txt' % batch_id)
+    out_loc = path.join(out_dir, '%d.tagged.txt' % batch_id)
     if path.exists(out_loc):
         print("Overwriting existing file");
     print('Batch', batch_id)
@@ -121,7 +121,7 @@ def represent_word(word):
     load_parses=("Load parses from binary", "flag", "b"),
 )
 def main(in_loc, out_dir, n_workers=4, load_parses=False):
-    load_and_transform(2, in_loc, out_dir)
+    load_and_transform(3, in_loc, out_dir)
 
 if __name__ == '__main__':
     plac.call(main)
