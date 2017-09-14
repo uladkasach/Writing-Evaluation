@@ -31,6 +31,6 @@ def similarity(word_a, word_b):
     
 def retreive_not_found():
     if(embeddings_choice == "GOOGLE"):
-        return google_embeddings_interface.not_found_list;
+        return list(google_embeddings_interface.not_found_set);
     else:
         return list(spacy_s2v_embeddings_interface.not_found_set);

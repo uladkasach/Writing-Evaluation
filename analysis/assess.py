@@ -9,7 +9,7 @@ import json;
 import nltk;
 
 
-input_mod = "flower";
+input_mod = "on_human_nature";
 #source = "inputs/flower."+input_mod+".txt"
 source = "inputs/"+input_mod+".txt";
 bool_remove_stopwords = False;
@@ -43,7 +43,7 @@ def split_sentences_by_delimeter(delimeter, sentences):
         fragments.extend(sentence.split(delimeter));
     return fragments;
 def find_sentences_by_spliting_periods_plus_heuristics(text):
-    print(text);
+    #print(text);
     ## replace Mr. Mrs. Ms. Dr. w/ Mr_, Mrs_, Ms_, Dr_
     replacements = [
         ["Mr.", "Mr_"],

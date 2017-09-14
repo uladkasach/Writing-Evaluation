@@ -45,11 +45,11 @@ def return_embedding_dictionary(source):
     ## return dictionary
     return embedding_dictionary;
                 
-not_found_list = [];
+not_found_set = set();
 def find_word_vector(word):
     if(word == "$PURPOSEFULL-SKIP-KEY$"): return False; 
     
-    global not_found_list;
+    global not_found_set;
     global vector_source;
     global bool_load_into_ram;
     global embedding_dictionary;
@@ -60,7 +60,7 @@ def find_word_vector(word):
         if word in embedding_dictionary:
             return embedding_dictionary[word];
         else:
-            not_found_list.append(word);
+            not_found_set.add(word);
             return False;
         
     else:
@@ -76,7 +76,7 @@ def find_word_vector(word):
                     return this_vector;
                 
                 if(index > 100000):
-                    not_found_list.append(word);
+                    not_found_set.add(word);
                     #print("could not find word " + word);
                     return this_vector; ## giveup here for testing speed's sake
         
