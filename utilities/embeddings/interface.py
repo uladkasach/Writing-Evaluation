@@ -1,10 +1,10 @@
+'''
+import ..utilities.embeddings.interface as embeddings
+'''
+
 import google_embeddings_interface;
 import spacy_s2v_embeddings_interface;
 
-'''
-freq, query_vector = model["natural_language_processing|NOUN"]
-model.most_similar(query_vector, n=3)
-'''
 
 ## define embeddings selection
 embeddings_choice = False;

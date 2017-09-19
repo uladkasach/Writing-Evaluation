@@ -9,7 +9,7 @@ import json;
 import nltk;
 
 
-input_mod = "on_human_nature";
+input_mod = "set_all_notlower_thres_0.8";
 #source = "inputs/flower."+input_mod+".txt"
 source = "inputs/"+input_mod+".txt";
 bool_remove_stopwords = False;
@@ -154,6 +154,7 @@ def convert_doc_to_text(source):
     text = " ".join(text);
     f.close();
     return text;
+
 def calculate_similarities_for_text(input_text):
     similarities = dict({
         "_meta" : dict({
@@ -295,9 +296,9 @@ for index in range(len(all_similarities)):
     # the histogram of the data
     colors = ['green', '#dbf8ff', 'white'];
     colors = colors[:len(metrics)];
-    n, bins, patches = single_ax.hist(data_list, num_bins, color=colors, weights=weights, label=labels)
+    n, bins, patches = single_ax.hist(data_list, num_bins, color=colors, weights=weights, label=labels, range=(-0.2, 1))
     single_ax.legend(prop={'size': 10})
-    n, bins, patches = this_axis.hist(data_list, num_bins, color=colors, weights=weights, label=labels)
+    n, bins, patches = this_axis.hist(data_list, num_bins, color=colors, weights=weights, label=labels, range=(-0.2, 1))
     this_axis.legend(prop={'size': 10})
     
     

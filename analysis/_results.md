@@ -1,3 +1,6 @@
+WordChoice
+
+
 the dog barked loudly at the mailman
 ['the,dog           ', 'dog,barked        ', 'barked,loudly     ', 'loudly,at         ', 'at,the            ', 'the,mailman       ']
 [0.056649426038716012, 0.34046032280900662, 0.43073733965486516, 0.11958903950439942, 0.32383936092102278, -0.010017586518783997]
@@ -13,12 +16,6 @@ the dog hammered loudly into mailman
 the man hammered nails into wood
 ['the,man           ', 'man,hammered      ', 'hammered,nails    ', 'nails,into        ', 'into,wood         ']
 [0.13924067067349327, 0.071761166629866147, 0.20719839402476867, 0.023759452133699968, 0.078167382884640119]
-
-
-
-
-
-
 
 
 

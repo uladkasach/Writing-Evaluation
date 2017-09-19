@@ -14,7 +14,9 @@ def similarity_between_words(word_a, word_b):
     global model;
     global not_found_list;
     if(model == False):
+        print("Loading sense2vec model for first time...");
         model = sense2vec.load(); #load it only when nessesary
+        print("Done loading sense2vec model");
         
     # convert to unicode
     word_a = word_a.decode('utf-8',errors='ignore');
@@ -22,11 +24,11 @@ def similarity_between_words(word_a, word_b):
         
     # grab vectors
     if(word_a not in model):
-        if(word_a not in not_found_set): print("(!) - " + word_a + " was not found");
+        #if(word_a not in not_found_set): print("(!) - " + word_a + " was not found");
         not_found_set.add(word_a);
         return False;
     if(word_b not in model):
-        if(word_b not in not_found_set): print("(!) - " + word_b + " was not found");
+        #if(word_b not in not_found_set): print("(!) - " + word_b + " was not found");
         not_found_set.add(word_b);
         return False;
     freq_a, vec_a = model[word_a];
