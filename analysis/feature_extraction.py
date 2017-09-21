@@ -12,6 +12,7 @@ required in each case
 import six
 import logging
 import numpy as np
+import nltk;
 
 
 
@@ -21,6 +22,7 @@ import numpy as np
 if __name__ == '__main__' and __package__ is None or True: ## enables imports of sibling "packages"
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+import utilities.plotting as plotting;
 ##########################
 import utilities.embeddings.interface as embeddings; 
 
@@ -30,9 +32,24 @@ import utilities.embeddings.interface as embeddings;
 embeddings.init("sense2vec"); ## always use sense2vec since it produces better seperation between similarities
 
 
+def plot_metrics_on_histogram(metrics, title, normalized = False, num_bins = 30, colors = None): ## utility function
+    return plotting.plot_metrics_on_histogram(metrics, title, normalized, num_bins, colors);
+
+def similarity(word_a, word_b): ## utility function
+    return embeddings.similarity(word_a, word_b);
+
+nltk_stopwords = False;
+def is_stop_word(token):
+    global nltk_stopwords;
+    if(nltk_stopwords == False): nltk_stopwords = nltk.corpus.stopwords.words("english");
+    word_part = token.split("|")[0].decode('utf-8',errors='ignore'); ## since we assume we're dealing with sence2vec vectors 
+    nltk_tokens = nltk.word_tokenize(word_part.lower());
+    return nltk_tokens[0] in nltk_stopwords;
+
 def split_sentence_into_tokens(sentence):
     sentence = sentence.split(" ");
-    sentence = [x for x in sentence if x.rstrip() != '' and x !='\n'];
+    delimeters_to_remove = ["__DOCEND__"];
+    sentence = [x for x in sentence if x.rstrip() != '' and x !='\n' and x.rstrip() not in delimeters_to_remove];
     return sentence;
 
 def extract_sentence_information(sentence):

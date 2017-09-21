@@ -4,8 +4,8 @@
 import csv
 
 essay_set_identifier = "all";
-threshold_score = 0.2;
-threshold_type = "higher";
+threshold_score = 0.0;
+threshold_type = "lower";
 
 ## read all lines
 header_list = ["essay_id", "essay_set", "score", "essay"];
