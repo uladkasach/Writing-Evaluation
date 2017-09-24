@@ -64,7 +64,7 @@ def extract_sentence_information(sentence):
     
     ## calculate basic n'th order word similarities, up to 4th order
     information["similarities"] = dict();
-    for i in range(4):
+    for i in range(5):
         information["similarities"]["d"+str(i)] = dict();
         information["similarities"]["d"+str(i)]["raw"] = calculate_nth_order_similarities(i, sentence); 
         information["similarities"]["d"+str(i)]["norm"] = normalize_information_list(information["similarities"]["d"+str(i)]["raw"]); 
@@ -113,18 +113,21 @@ def calculate_similarities_across_borders(parts):
     return similarities; 
     
 def normalize_information_list(info):
-    if(len(info) == 0): return False;
-    ## average
-    ## stdev
-    ## max
-    ## min
-    ## (WEIGHTED AVERAGE?)
+    data = dict({
+            "mean" : False,
+            "stdev" : False,
+            "max" : False,
+            "min" : False,
+     });
     
-    data = dict();
+    if(len(info) == 0):   return data;
+    
     data["mean"] = np.mean(info);
     data["stdev"] = np.std(info);
     data["max"] = np.max(info);
     data["min"] = np.min(info);
+    
+    return data;
         
 
 def calculate_nth_order_similarities(order, sentence):
