@@ -22,8 +22,8 @@ import nltk;
 if __name__ == '__main__' and __package__ is None or True: ## enables imports of sibling "packages"
     from os import sys, path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import utilities.plotting as plotting;
 ##########################
+import utilities.plotting as plotting;
 import utilities.embeddings.interface as embeddings; 
 
 ###########################################################################
@@ -69,6 +69,15 @@ def extract_sentence_information(sentence):
         information["similarities"]["d"+str(i)]["raw"] = calculate_nth_order_similarities(i, sentence); 
         information["similarities"]["d"+str(i)]["norm"] = normalize_information_list(information["similarities"]["d"+str(i)]["raw"]); 
         
+        
+    ## calculate scaled n'th order word similarities, up to 4th order
+    information["backscaled_similarities"] = dict();
+    for i in range(5):
+        information["backscaled_similarities"]["d"+str(i)] = dict();
+        information["backscaled_similarities"]["d"+str(i)]["raw"] = calculate_backscaled_nth_order_similarities(i, sentence); 
+        information["backscaled_similarities"]["d"+str(i)]["norm"] = normalize_information_list(information["backscaled_similarities"]["d"+str(i)]["raw"]); 
+    
+        
     ## calculate parse_tree similarities
     #information["parse_tree_similarities"] = [];
     
@@ -82,8 +91,13 @@ def extract_sentence_information(sentence):
         information["across_punctuation_similarities"][punctuation]["raw"] = calculate_similarities_across_punctuation(punctuation_choices[punctuation], sentence);
         information["across_punctuation_similarities"][punctuation]["norm"] = normalize_information_list(information["across_punctuation_similarities"][punctuation]["raw"]);
         
+        
+        
     ## calculate sentence length
     information["length"] = len(sentence);
+    information["length_convinience"] = dict(); ## convinience way of accessing this len data
+    information["length_convinience"]["raw"] = [len(sentence)];
+    information["length_convinience"]["norm"] = normalize_information_list(information["length_convinience"]["raw"]);
     
     ## calculate word lengths
     information["word_lengths"] = dict();
@@ -129,6 +143,21 @@ def normalize_information_list(info):
     
     return data;
         
+def calculate_backscaled_nth_order_similarities(order, sentence):
+    similarities = [];
+    for i in range(len(sentence)):
+        this_index = i;
+        prev_index = i - 1;
+        nth_order_back_index = prev_index - 1 - order; ## s.t. order 0 = -1/-2
+        if(prev_index < 0): continue; 
+        if(nth_order_back_index < 0): continue;
+        this_word = sentence[this_index];
+        prev_word = sentence[prev_index];
+        nth_back_word = sentence[nth_order_back_index];
+        similarity_top = embeddings.similarity(this_word, prev_word);
+        similarity_bot = embeddings.similarity(this_word, nth_back_word);
+        if(similarity_top != False and similarity_bot != False): similarities.append(similarity_top/float(similarity_bot));
+    return similarities;
 
 def calculate_nth_order_similarities(order, sentence):
     #print("calculating "+str(order)+"'th order statistics...");

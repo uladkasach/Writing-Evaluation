@@ -30,13 +30,14 @@ def load_sentences(input_loc):
     return data_list;
 
 
-
-def vectorize_sentence(sentence, aggregate_types = ["MAX"]):
-    print(sentence);
+KEYS_PRINTED = False;
+def vectorize_sentence(sentence, aggregate_types = ["MAX"], include_data=["SIM"]):
     
-    ## ensure type is valid
+    ## ensure choices are valid
     for a_type in aggregate_types:
-        assert a_type in ["MAX", "MIN", "AVG", "STD"];
+        assert a_type in ["MAX", "MIN", "MEAN", "STDEV"];
+    for a_type in include_data:
+        assert a_type in ["SIM", "PUNCT", "LEN"];
         
     ## extract information
     info = feature_extraction.extract_sentence_information(sentence);
@@ -45,13 +46,30 @@ def vectorize_sentence(sentence, aggregate_types = ["MAX"]):
     data = dict();
     
     ## append basic data
-    basic_similarities = info["similarities"];
-    for sim_type in basic_similarities.keys():
-        normed_data = basic_similarities[sim_type]["norm"];
-        data[sim_type] = normed_data;
-        
+    if("SIM" in include_data):
+        basic_similarities = info["similarities"];
+        for sim_type in basic_similarities.keys():
+            normed_data = basic_similarities[sim_type]["norm"];
+            data[sim_type] = normed_data;
+            
+    ## append word length
+    if("LEN" in include_data):
+        data["length_convinience"] = info["length_convinience"]["norm"];
+        data["word_lengths"] = info["word_lengths"]["norm"];
+
+    ## append punctuation
+    if("PUNCT" in include_data):
+        basic_similarities = info["across_punctuation_similarities"];
+        for sim_type in basic_similarities.keys():
+            normed_data = basic_similarities[sim_type]["norm"];
+            data[sim_type] = normed_data;
+
+    
     ## create vector of data from aggragate_types selected
-    print(sorted(data.keys()));
+    global KEYS_PRINTED;
+    if(KEYS_PRINTED == False):
+        print(sorted(data.keys()));
+        KEYS_PRINTED = True;
     vector = [];
     if("MAX" in aggregate_types): vector.extend([data[data_type]["max"] for data_type in sorted(data.keys())])
     if("MIN" in aggregate_types): vector.extend([data[data_type]["min"] for data_type in sorted(data.keys())])
@@ -70,8 +88,10 @@ def vectorize_sentence(sentence, aggregate_types = ["MAX"]):
 ## build vector data        
 sentences = load_sentences("inputs/sentences_of_set_all.csv");
 vectors = [];
+vectorization_data=["MEAN", "STDEV"];
+include_data=["SIM","PUNCT","LEN"];
 for index, sentence in enumerate(sentences):
-    data_vec = vectorize_sentence(sentence[header_list.index("text")]);
+    data_vec = vectorize_sentence(sentence[header_list.index("text")], vectorization_data, include_data);
     new_vector = dict({
         "sentence_id": index,
         "essay_id": sentence[header_list.index("essay_id")],
@@ -83,11 +103,11 @@ for index, sentence in enumerate(sentences):
     if(index % 1000 == 0): print("vectorizing at sentence index "  +str(index));
 
 ## output data as csv
-with open("vectors/vectors_of_set_all.csv", "w+") as file:
+with open("vectors/vectors_of_set_all-"+"_".join(include_data)+"-"+"_".join(vectorization_data)+".csv", "w+") as file:
     writer = csv.writer(file);
     for i, data in enumerate(vectors):
         vector = [data["sentence_id"], data["essay_id"], data["essay_set"], data["score"]];
         vector.extend(data["data"]);
-        if(i % 200 == 0): print("writing sentence " + str(i));
+        if(i % 2000 == 0): print("writing sentence " + str(i));
         writer.writerow(vector); 
     

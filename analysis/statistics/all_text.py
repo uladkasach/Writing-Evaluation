@@ -1,9 +1,10 @@
 ###########################################################################
 ## import dependencies
 ###########################################################################
-if __name__ == '__main__' and __package__ is None or True: ## enables imports of sibling "packages" and "parent"
+if __name__ == '__main__' and __package__ is None or True: 
     from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))) ## enables importing of parent sibling
+    sys.path.insert(0,'..') ## enables importing from parent dir
     
 import utilities.plotting as plotting;
 import feature_extraction;
@@ -53,8 +54,13 @@ def calculate_statistics_for_sentence_lists(lists):
     stats = dict();
     
     stats["intra_sentence"] = dict();
-    for i in range(4):
+    for i in range(5):
         stats["intra_sentence"]["d"+str(i)] = [];
+        
+        
+    stats["backscaled_intra_sentence"] = dict();
+    for i in range(5):
+        stats["backscaled_intra_sentence"]["d"+str(i)] = [];
         
     stats["punctuation"] = dict();
     stats["punctuation"]["period"] = [];
@@ -63,13 +69,19 @@ def calculate_statistics_for_sentence_lists(lists):
     stats["basic"] = dict();
     stats["basic"]["word_length"] = [];
     stats["basic"]["sentence_length"] = [];
+    index = -1;
     for sentence_list in lists:
         for sentence in sentence_list:
+            index += 1;
+            if(index % 1000 ==0): print("at index " + str(index));
             information = feature_extraction.extract_sentence_information(sentence);
             
             ## intra-sentence word similarity
-            for i in range(4):
+            for i in range(5):
                 stats["intra_sentence"]["d"+str(i)].extend(information["similarities"]["d"+str(i)]["raw"]);
+                
+            for i in range(5):
+                stats["backscaled_intra_sentence"]["d"+str(i)].extend(information["backscaled_similarities"]["d"+str(i)]["raw"]);
                 
             ## across comma similarity
             stats["punctuation"]["comma"].extend(information["across_punctuation_similarities"]["comma"]["raw"]);
@@ -84,8 +96,8 @@ def calculate_statistics_for_sentence_lists(lists):
     
 def plot_statistics_as_histograms(base_title, stats):
     ## intra-sentence word similarity
-    plotting.plot_metrics_on_histogram(stats["intra_sentence"], base_title+"-intra_sentence", normalized = True);
-    
+    #plotting.plot_metrics_on_histogram(stats["intra_sentence"], base_title+"-intra_sentence", normalized = True);
+    plotting.plot_metrics_on_histogram(stats["backscaled_intra_sentence"], base_title+"-intra_sentence", normalized = True);
     
     #plot_metrics_on_histogram(stats["intra-sentence"]);
 

@@ -47,7 +47,7 @@ def calculate_statistics_on_clusters(clusters):
     return stats;
 
 
-def plot_the_statistics(statistics):
+def plot_the_statistics(statistics, base_file_name):
     cluster_count = len(statistics.keys());
     
     for key, statistic in statistics.iteritems():
@@ -58,7 +58,7 @@ def plot_the_statistics(statistics):
         #x = np.linspace(mu-3*variance,mu+3*variance, 100)
         plt.plot(x_axis, norm.pdf(x_axis,mu,sigma))
 
-    plt.title("approximate scores from cluster statistics, n = " + str(cluster_count));
+    plt.title("approximate scores from cluster statistics, n = " + str(cluster_count) + " \n"+base_file_name);
     #plt.show()
     return plt;
 
@@ -82,7 +82,7 @@ def main(source_file):
         json.dump(stats, outfile, sort_keys=True, indent=4)
         print json.dumps(stats, sort_keys=True, indent=4)
     
-    plt = plot_the_statistics(stats);
+    plt = plot_the_statistics(stats, base_file_name );
     plt.savefig('results/'+base_file_name+'.png');
     
     

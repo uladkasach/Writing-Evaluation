@@ -9,7 +9,7 @@
 import csv;
 from sklearn.cluster import KMeans;
 import plac;
-import time;
+import datetime;
 
 
 def load_sentences(input_loc):
@@ -65,7 +65,7 @@ def main(source_file, n_clusters):
     clusters = KMeans(n_clusters=n_clusters).fit_predict(features);
     
     print("saving results...");
-    record_results(sentences, clusters, base_file_name + "_n"+str(n_clusters)+"_"+str(time.time())); ## note, timestamp included in file name so that we can have multiple results for the same n_clusters and the same file. kmeans results vary each time.
+    record_results(sentences, clusters, base_file_name + "_n"+str(n_clusters)+"_"+str(datetime.datetime.now().strftime("%Y.%m.%d.%H.%M"))); ## note, timestamp included in file name so that we can have multiple results for the same n_clusters and the same file. kmeans results vary each time.
     
     
     
