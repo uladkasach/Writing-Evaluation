@@ -38,9 +38,12 @@ def get_docs_from_file(source_file, document_delimeter):
     f = open(source_file, 'r');
     docs = [];
     for index, line in enumerate(f.readlines()):
-        #if (index > 10): break;  
+        if (index > 20000 and False): 
+            print("DEV LOADING LIMIT REACHED, CONTINUING ON");
+            break;  
         docs.append(line.rstrip());
     f.close();
+    print("total loaded : " + str(len(docs)));
     return docs;
 
 def convert_docs_to_sentence_lists(docs):
@@ -69,12 +72,16 @@ def calculate_statistics_for_sentence_lists(lists):
     stats["basic"] = dict();
     stats["basic"]["word_length"] = [];
     stats["basic"]["sentence_length"] = [];
+    
+    stats["parse_tree"] = dict();
+    for key in ["V-N", "N-ADJ", "V-ADV"]:
+        stats["parse_tree"][key] = [];
     index = -1;
     for sentence_list in lists:
         for sentence in sentence_list:
             index += 1;
             if(index % 1000 ==0): print("at index " + str(index));
-            information = feature_extraction.extract_sentence_information(sentence);
+            information = feature_extraction.extract_sentence_information(sentence, bool_syntax_tree_data = True);
             
             ## intra-sentence word similarity
             for i in range(5):
@@ -89,6 +96,12 @@ def calculate_statistics_for_sentence_lists(lists):
             ## basic stats
             stats["basic"]["word_length"].extend(information["word_lengths"]["raw"]);
             stats["basic"]["sentence_length"].extend([information["length"]]);
+            
+            ## syntactic
+            for key in ["V-N", "N-ADJ", "V-ADV"]:
+                data = information["parse_tree"][key]["raw"];
+                stats["parse_tree"][key].extend(data);
+            
     return stats;
             
 
@@ -97,7 +110,8 @@ def calculate_statistics_for_sentence_lists(lists):
 def plot_statistics_as_histograms(base_title, stats):
     ## intra-sentence word similarity
     #plotting.plot_metrics_on_histogram(stats["intra_sentence"], base_title+"-intra_sentence", normalized = True);
-    plotting.plot_metrics_on_histogram(stats["backscaled_intra_sentence"], base_title+"-intra_sentence", normalized = True);
+    #plotting.plot_metrics_on_histogram(stats["backscaled_intra_sentence"], base_title+"-backscaled", normalized = True);
+    plotting.plot_metrics_on_histogram(stats["parse_tree"], base_title+"-parse_tree", normalized = True);
     
     #plot_metrics_on_histogram(stats["intra-sentence"]);
 

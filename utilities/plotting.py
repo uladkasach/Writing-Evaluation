@@ -21,7 +21,7 @@ def plot_metrics_on_histogram(metrics, title, normalized = False, num_bins = 30,
     #colors = ['green', '#dbf8ff', 'white'];
     #colors = colors[:len(metrics)];
     this_fig, this_axis = plt.subplots()
-    this_axis.hist(data_list, num_bins, color=colors, weights=weights, label=labels, range=(-2, 10)) #, range=(-0.2, 1)
+    this_axis.hist(data_list, num_bins, color=colors, weights=weights, label=labels, range=(-0.2, 1)) #, range=(-0.2, 1)
     this_axis.legend(prop={'size': 10})
 
     plt.title(title);

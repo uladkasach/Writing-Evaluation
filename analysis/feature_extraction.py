@@ -25,6 +25,7 @@ if __name__ == '__main__' and __package__ is None or True: ## enables imports of
 ##########################
 import utilities.plotting as plotting;
 import utilities.embeddings.interface as embeddings; 
+import utilities.spacy as spacy_util; 
 
 ###########################################################################
 ## initialize dependencies
@@ -52,7 +53,7 @@ def split_sentence_into_tokens(sentence):
     sentence = [x for x in sentence if x.rstrip() != '' and x !='\n' and x.rstrip() not in delimeters_to_remove];
     return sentence;
 
-def extract_sentence_information(sentence):
+def extract_sentence_information(sentence, bool_syntax_tree_data = False):
     ## ensure sentence is a string
     if isinstance(sentence, six.string_types):
         sentence = split_sentence_into_tokens(sentence);
@@ -90,7 +91,21 @@ def extract_sentence_information(sentence):
         information["across_punctuation_similarities"][punctuation] = dict();
         information["across_punctuation_similarities"][punctuation]["raw"] = calculate_similarities_across_punctuation(punctuation_choices[punctuation], sentence);
         information["across_punctuation_similarities"][punctuation]["norm"] = normalize_information_list(information["across_punctuation_similarities"][punctuation]["raw"]);
-        
+    
+    if(bool_syntax_tree_data):
+        ## calculate syntax tree based similarities for lexically significant word pairs
+        parse_choices = [
+            ("V-N", ["VERB"], ["NOUN", "PRON"]),
+            ("N-ADJ", ["NOUN", "PRON"], ["ADJ"]),
+            ("V-ADV", ["VERB"], ["ADV"]),
+            #("V-V", ["VERB"], ["VERB"]),
+            #("N-N", ["NOUN", "PRON"], ["NOUN", "PRON"]),
+        ]
+        information["parse_tree"] = dict();
+        for choice in parse_choices:
+            information["parse_tree"][choice[0]] = dict();
+            information["parse_tree"][choice[0]]["raw"] = calculate_similarities_for_parse_tree_pairs(sentence, type_a = choice[0], type_b = choice[1]);
+            information["parse_tree"][choice[0]]["norm"] = normalize_information_list(information["parse_tree"][choice[0]]["raw"]);
         
         
     ## calculate sentence length
@@ -104,9 +119,123 @@ def extract_sentence_information(sentence):
     information["word_lengths"]["raw"] = [len(word.split("|")[0]) for word in sentence];
     information["word_lengths"]["norm"] = normalize_information_list(information["word_lengths"]["raw"]);
     
+    
     ## return info
     return information;
 
+
+def remove_tags_and_stringify_sentence(sentence):
+    string = "";
+    for tagged_word in sentence:
+        parts = tagged_word.split("|");
+        if(len(parts) < 2): continue;
+            
+        tag = parts[1];
+        word = parts[0];
+        
+        if(tag != "PUNCT" and len(string) != 0):
+            string += " ";
+        string += word;
+    return string;
+
+
+
+'''
+    Compute pair similarity for each word for relevant pairs of  immediate child level. See ticket https://github.com/uladkasach/Writing-Evaluation/issues/18 for more info
+    For example, for noun-verbs in "Dear Local_Newspaper, I have found that many experts say that computers do not benifit our society."
+    compare:
+        (Local_Newspaper, Found)
+        (I, Found)
+        (Experts, Say)
+        (Computers, Benefit)
+        (Benefit, Society)
+'''
+def map_original_tokens_to_doced_tokens(orig_list, doc_list):
+    ## must map indicies of sent to indicies of sentence -> go through in order string and match word+POS of each, 
+    ##      note that you may need to skip a word in either set to catch up as doc may do the following :  I|PRON 've|VERB -> I 've -> I|PRON '|PUNCT ve|PRON
+    ##      note, this is only required since we dont pass the original sentence with the tagged sentence. If we did, we would get the same result.
+    
+    mapping = dict();
+    next_orig_mapped_start_index = 0;
+    ## find the original_tagged_word that this token corresponds to
+    for token in (doc_list):
+        mapped_this_word = False;
+        #print("doc index : " + str(token.i));
+        target_word_tagged = spacy_util.sense2vec.represent_word(token);
+        for orig_index in range(next_orig_mapped_start_index, len(orig_list)):
+            tagged_word = orig_list[orig_index];
+            #print(" -> " + str(target_word) + "|" + str(target_pos) + " -vs- " + str(word) + "|" + str(pos));
+            if(target_word_tagged == tagged_word):
+                #print("    `-> match!");
+                mapping[token.i] = orig_index;
+                next_orig_mapped_start_index = orig_index + 1;
+                mapped_this_word = True;
+                break; ## found the word, move on
+        #if(not mapped_this_word): print("Word " + (target_word_tagged) + " was not matched");
+    return mapping;
+            
+    
+cached_parse_tree_similarity_sentence_data = dict({ "sentence": False, "doc_list" : False, "index_mapping" : False});
+def calculate_similarities_for_parse_tree_pairs(sentence, type_a = ["VERB"], type_b = ["NOUN", "PRON"]):
+    global cached_parse_tree_similarity_sentence_data;
+    sentence_list = sentence;
+    
+    if(sentence == cached_parse_tree_similarity_sentence_data["sentence"]):
+        doc_list = cached_parse_tree_similarity_sentence_data["doc_list"];
+        index_mapping = cached_parse_tree_similarity_sentence_data["index_mapping"];
+    else:
+        ## tokenize the sentence w/ spacy to get tree structure
+        parsable_untagged_sentence = remove_tags_and_stringify_sentence(sentence);
+        doc = spacy_util.general.build_doc(parsable_untagged_sentence);
+        doc = spacy_util.sense2vec.preprocess_doc(doc);
+        sents = [sent for sent in doc.sents];
+        sent = sents[0];
+        doc_list = [x for x in sent];
+
+        ## map the doc list to the sentence list (accounts for differences in labeling and tokenization caused by text original text not being availible)
+        index_mapping = map_original_tokens_to_doced_tokens(sentence_list, doc_list);
+
+        ## display for debugging 
+        #spacy_util.parse_tree.show_tree_for_sentence(sent);
+        
+        cached_parse_tree_similarity_sentence_data = dict({
+            "sentence": sentence, "doc_list" : doc_list, "index_mapping" : index_mapping
+        })
+    
+    ## for each doc list token, if it is of type_a or type_b, compute similarities of its immediate children of oposite_type
+    embeddings.load_embeddings(); ## makes debugging output cleaner
+    similarities = [];
+    for token in doc_list:
+        if(token.pos_ in type_a):
+            target_type = type_b;
+        elif(token.pos_ in type_b):
+            target_type = type_a;
+        else:
+            continue; ## we dont care about this word
+        if(token.i not in index_mapping): continue; ## token was not mapped, can not be compared.
+        orig_token_word = sentence_list[index_mapping[token.i]];
+        #print("type match: " + token.text + "|" + token.pos_ + " ( " + orig_token_word + " )")
+        for child in token.children:
+            if(child.pos_ in target_type):
+                if(child.i not in index_mapping): continue; ## child was not mapped, can not be compared.
+                orig_child_word = sentence_list[index_mapping[child.i]];
+                this_similarity = embeddings.similarity(orig_child_word, orig_token_word);
+                #print(" `-> child : " + child.text + "|" + child.pos_ + " ( " + orig_child_word + " ), similarity : " + str(this_similarity));
+                #print("(^) " + orig_token_word + " dot " + orig_child_word + " = " + str(this_similarity));
+                if(this_similarity is not False): similarities.append(this_similarity);
+                    
+    return similarities;
+    
+'''
+#sentence = "Dear|NOUN local|ADJ newspaper|NOUN ,|PUNCT I|PRON 've|VERB heard|VERB that|ADP not|ADV many|ADJ people|NOUN think|VERB computers|NOUN benefit|VERB society|NOUN .|PUNCT I|PRON disagree|VERB with|ADP that|DET .|PUNCT";
+sentence = "Dear|VERB Local_Newspaper|ENT ,|PUNCT  I|PRON have|VERB found|VERB that|ADP many|ADJ experts|NOUN say|VERB that|ADP computers|NOUN do|VERB not|ADV benifit|VERB our|ADJ society|NOUN .|PUNCT";
+sentence = split_sentence_into_tokens(sentence);
+print(calculate_similarities_for_parse_tree_pairs(sentence));
+exit();
+'''
+
+        
+    
 def calculate_similarities_across_punctuation(delimeter, sentence):
     sentence = " ".join(sentence);
     sentence_parts = sentence.split(delimeter);
@@ -128,6 +257,7 @@ def calculate_similarities_across_borders(parts):
     
 def normalize_information_list(info):
     data = dict({
+            "n" : 0,
             "mean" : False,
             "stdev" : False,
             "max" : False,
@@ -136,6 +266,7 @@ def normalize_information_list(info):
     
     if(len(info) == 0):   return data;
     
+    data["n"] = len(info);
     data["mean"] = np.mean(info);
     data["stdev"] = np.std(info);
     data["max"] = np.max(info);

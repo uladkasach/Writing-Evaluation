@@ -9,7 +9,6 @@ if __name__ == '__main__' and __package__ is None or True:
 import utilities.plotting as plotting;
 import feature_extraction;
 import plac;
-import spacy;
 import numpy as np;
 import matplotlib.pyplot as plt;
 import collections; 

@@ -18,6 +18,16 @@ def init(choice):
     else:
         print("Error - embeddings choice was invalid");
         
+def load_embeddings():
+    global embeddings_choice;
+    if(embeddings_choice == False):
+        print("Error - embeddings has not been initialized. (run embeddings.init(...))");
+        exit();
+    if (embeddings_choice == "SPACY"):
+        return spacy_s2v_embeddings_interface.load_embeddings();
+    
+    
+        
 def similarity(word_a, word_b):
     global embeddings_choice;
     if(embeddings_choice == False):

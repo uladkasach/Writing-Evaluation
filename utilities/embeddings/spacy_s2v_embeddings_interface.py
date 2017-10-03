@@ -13,10 +13,7 @@ not_found_set = set();
 def similarity_between_words(word_a, word_b):
     global model;
     global not_found_list;
-    if(model == False):
-        print("Loading sense2vec model for first time...");
-        model = sense2vec.load(); #load it only when nessesary
-        print("Done loading sense2vec model");
+    load_embeddings();
         
     # convert to unicode
     word_a = word_a.decode('utf-8',errors='ignore');
@@ -37,4 +34,12 @@ def similarity_between_words(word_a, word_b):
     similarity =  model.data.similarity(vec_a, vec_b);
     #print(word_a + " dot " + word_b + " = " + str(similarity));
     return similarity;
+
+def load_embeddings():
+    global model;
+    global not_found_list;
+    if(model == False):
+        print("(*) Loading sense2vec model for first time...");
+        model = sense2vec.load(); #load it only when nessesary
+        #print("Done loading sense2vec model");
     
