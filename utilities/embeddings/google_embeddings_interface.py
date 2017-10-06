@@ -3,7 +3,7 @@ import numpy as np;
 import re;
 
 
-## this file contains many helpful functions for dealing with word vectors and utilizes the googlenews vectors 
+## this file contains many helpful functions for dealing with word vectors and utilizes the googlenews vectors
 vector_source = "inputs/GoogleNews-vectors-negative300.csv"
 bool_load_into_ram = True
 embedding_dictionary = False;
@@ -14,24 +14,24 @@ def extract_word_and_vector_from_line(line):
     this_word = parts[0];
     this_vector = [float(j) for j in parts[1:]];
     return [this_word, this_vector];
-    
-    
+
+
 
 def return_embedding_dictionary(source):
     embedding_dictionary = dict();
     global dev_word_limit;
-    
+
     ## load lines
     with open(source) as file:
         if(True): #devmode
-            lines = []; 
+            lines = [];
             with open(vector_source) as file:
                 index = -1;
                 for line in file:
-                    index += 1;        
+                    index += 1;
                     lines.append(line);
                     if(index > dev_word_limit): break;
-        else: 
+        else:
             lines = file.readlines();
 
     ## build dictionary
@@ -41,14 +41,14 @@ def return_embedding_dictionary(source):
         this_vector = result[1];
         embedding_dictionary[this_word] = this_vector;
         if(index % 10000 == 0): print("At wordvector " + str(index));
-        
+
     ## return dictionary
     return embedding_dictionary;
-                
+
 not_found_set = set();
 def find_word_vector(word):
-    if(word == "$PURPOSEFULL-SKIP-KEY$"): return False; 
-    
+    if(word == "$PURPOSEFULL-SKIP-KEY$"): return False;
+
     global not_found_set;
     global vector_source;
     global bool_load_into_ram;
@@ -62,7 +62,7 @@ def find_word_vector(word):
         else:
             not_found_set.add(word);
             return False;
-        
+
     else:
         with open(vector_source) as file:
             index = -1;
@@ -71,20 +71,20 @@ def find_word_vector(word):
                 result = extract_word_and_vector_from_line(line);
                 this_word = result[0];
                 this_vector = result[1];
-                
-                if(word == this_word): 
+
+                if(word == this_word):
                     return this_vector;
-                
+
                 if(index > 100000):
                     not_found_set.add(word);
                     #print("could not find word " + word);
-                    return this_vector; ## giveup here for testing speed's sake
-        
-        
+                    return False; ## giveup here for testing speed's sake
+
+
     return vector;
 
 def calculate_cosine_similarity_between_vectors(vec_a, vec_b):
-    ''' 
+    '''
     A dot B = |A||B|cosine(theta)
     return cosine(theta)
     '''
@@ -97,7 +97,7 @@ def calculate_cosine_similarity_between_vectors(vec_a, vec_b):
 def similarity_between_words(word_a, word_b):
     word_a = re.sub(r'[^a-zA-Z]', '', word_a) # remove nonalphanumberic
     word_b = re.sub(r'[^a-zA-Z]', '', word_b) # remove nonalphanumberic
-    
+
     vector_a = find_word_vector(word_a);
     vector_b = find_word_vector(word_b);
     if(vector_a == False or vector_b == False): return False;

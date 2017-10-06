@@ -74,7 +74,7 @@ def calculate_statistics_for_sentence_lists(lists):
     stats["basic"]["sentence_length"] = [];
     
     stats["parse_tree"] = dict();
-    for key in ["V-N", "N-ADJ", "V-ADV"]:
+    for key in ["V-N", "N-N", "N-ADJ", "V-ADV"]:
         stats["parse_tree"][key] = [];
     index = -1;
     for sentence_list in lists:
@@ -98,7 +98,7 @@ def calculate_statistics_for_sentence_lists(lists):
             stats["basic"]["sentence_length"].extend([information["length"]]);
             
             ## syntactic
-            for key in ["V-N", "N-ADJ", "V-ADV"]:
+            for key in ["V-N", "N-N", "N-ADJ", "V-ADV"]:
                 data = information["parse_tree"][key]["raw"];
                 stats["parse_tree"][key].extend(data);
             
