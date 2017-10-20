@@ -16,7 +16,7 @@ if __name__ == '__main__' and __package__ is None or True:
 import feature_extraction;
 import csv;
 
-
+embeddings_choice="sense2vec"; ## or sense2vec
 header_list = ["essay_id", "essay_set", "score", "text"];
 def load_sentences(input_loc):
     ## read all lines
@@ -32,15 +32,17 @@ def load_sentences(input_loc):
 
 def vectorize_sentence(sentence):
     ## extract information
-    info = feature_extraction.extract_sentence_information(sentence, chosen_list=["semantic"]);
+    info = feature_extraction.extract_sentence_information(sentence, chosen_list=["semantic"], embeddings_choice=embeddings_choice);
     vector = info["semantic"]["average"];
+
     if(vector == False): return False;
     return vector;
 
 
 
 ## build vector data
-sentences = load_sentences("inputs/sentences_of_set_all.csv");
+input_mod = "essay_set_all";
+sentences = load_sentences("inputs/"+input_mod+".csv");
 vectors = [];
 for index, sentence in enumerate(sentences):
     data_vec = vectorize_sentence(sentence[header_list.index("text")]);
@@ -56,7 +58,7 @@ for index, sentence in enumerate(sentences):
     if(index % 1000 == 0): print("vectorizing at sentence index "  +str(index));
 
 ## output data as csv
-with open("vectors/semantic_vectors_of_set_all-average.csv", "w+") as file:
+with open("vectors/"+input_mod+"-average-"+embeddings_choice+".csv", "w+") as file:
     writer = csv.writer(file);
     for i, data in enumerate(vectors):
         vector = [data["sentence_id"], data["essay_id"], data["essay_set"], data["score"]];

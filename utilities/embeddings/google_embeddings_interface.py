@@ -30,7 +30,7 @@ def return_embedding_dictionary(source):
                 for line in file:
                     index += 1;
                     lines.append(line);
-                    if(index > dev_word_limit): break;
+                    if(index > dev_word_limit and dev_word_limit > 0): break;
         else:
             lines = file.readlines();
 

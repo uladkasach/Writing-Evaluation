@@ -30,6 +30,7 @@ import utilities.spacy as spacy_util;
 ###########################################################################
 ## initialize dependencies
 ###########################################################################
+loaded_embeddings_choice = "sense2vec";
 embeddings.init("sense2vec"); ## always use sense2vec since it produces better seperation between similarities
 
 
@@ -53,7 +54,9 @@ def split_sentence_into_tokens(sentence):
     sentence = [x for x in sentence if x.rstrip() != '' and x !='\n' and x.rstrip() not in delimeters_to_remove];
     return sentence;
 
-def extract_sentence_information(sentence, chosen_list = "ALL"):
+def extract_sentence_information(sentence, chosen_list = "ALL", embeddings_choice="sense2vec"):
+    assert(embeddings_choice == loaded_embeddings_choice);
+
     ## parse options
     compute_options = dict({
         "basic_similarities":False,
@@ -75,6 +78,10 @@ def extract_sentence_information(sentence, chosen_list = "ALL"):
         sentence = split_sentence_into_tokens(sentence);
     else:
         raise Exception("Sentence is not a string... Error");
+
+    ## strip tags if needed
+    if(embeddings_choice == "word2vec" and loaded_embeddings_choice == "word2vec"):
+        sentence = remove_tags_and_stringify_sentence(sentence);
 
     ## begin information object
     information = dict();
@@ -145,7 +152,7 @@ def extract_sentence_information(sentence, chosen_list = "ALL"):
     ## return info
     return information;
 
-def compute_average_word_vector(sentence):
+def compute_average_word_vector(sentence, normalize=True):
     vectors = [];
     for word in sentence:
         vector = embeddings.vector(word);
@@ -154,7 +161,13 @@ def compute_average_word_vector(sentence):
     if(len(vectors) == 0): return False;
     vectors = np.array(vectors);
     average = np.mean(vectors, axis=0);
+
+    if(normalize):
+        average = average / (np.dot(average, average));
+        
     average = average.tolist();
+
+
     return average;
 
 '''
@@ -164,8 +177,9 @@ compute_average_word_vector(sentence);
 '''
 
 
-def remove_tags_and_stringify_sentence(sentence):
+def remove_tags_and_stringify_sentence(sentence, bool_return_parts = False):
     string = "";
+    string_parts = [];
     for tagged_word in sentence:
         parts = tagged_word.split("|");
         if(len(parts) < 2): continue;
@@ -176,7 +190,11 @@ def remove_tags_and_stringify_sentence(sentence):
         if(tag != "PUNCT" and len(string) != 0):
             string += " ";
         string += word;
-    return string;
+        string_parts.append(word);
+    if(bool_return_parts == True):
+        return string_parts;
+    else:
+        return string;
 
 
 
