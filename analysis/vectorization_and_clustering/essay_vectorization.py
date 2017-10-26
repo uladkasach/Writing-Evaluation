@@ -76,13 +76,14 @@ def generate_vectors_with_mean(sentences):
 
 def record_essay_vectors(essays, base_file_name):
     ## output data as csv
-    with open("essay_vectors/"+base_file_name+".csv", "w+") as file:
+    with open("essay_vectors/essay_"+base_file_name+".csv", "w+") as file:
         writer = csv.writer(file);
         for i, data in enumerate(essays):
             vector = [data["essay_id"], data["essay_set"], data["score"]];
             vector.extend(data["features"]);
             if(i % 2000 == 0): print("writing essay " + str(i));
             writer.writerow(vector);
+
 
 @plac.annotations(
     method=("Vectorization Method", 'positional', None, str, ['mean', 'k-sparce','k-dense']), # (1), (2), (3) from beginning of this file
@@ -91,7 +92,6 @@ def record_essay_vectors(essays, base_file_name):
 )
 def main(method, sentence_source_file, cluster_source_file):
     base_file_name = ".".join(sentence_source_file.split("/")[-1].split(".")[:-1]); # retreive file name w/o extension
-
 
     print("loading sentences...");
     sentences = load_sentences(sentence_source_file, dev_limit = -1);
