@@ -21,7 +21,7 @@ class Batch_and_Shuffler:
         self.shuffle_data();
 
     def shuffle_data(self):
-        print("Shuffling data!");
+        #print("Shuffling data!");
         # shuffles data while keeping labels and features in order with eachother
 
         data = self.features;
@@ -47,6 +47,10 @@ class Batch_and_Shuffler:
             self.index += 1;
         return labels, features;
 
+    def get_all(self):
+        self.shuffle_data();
+        return self.labels, self.features;
+
 
 class Neural_Network_Model:
     ## TODO - handle arbitrary len hidden layers in a better way, perhaps try Keras so as to not recreate the wheel, https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/
@@ -68,7 +72,7 @@ class Neural_Network_Model:
         out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
         return out_layer
 
-    def build_graph(self, n_classes, n_input, learning_rate = 0.5):
+    def build_graph_and_start_session(self, n_classes, n_input, learning_rate = 0.5):
         ###################################
         # tf Graph input
         ###################################
@@ -101,97 +105,107 @@ class Neural_Network_Model:
         cost = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(pred, y)))) ## RMSE
         train_step = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) ## ADAM optimizer for learning
 
-        return x,y,weights,biases,pred,cost,train_step;
+
+        ##########
+        ## define graph initialization
+        ##########
+        init = tf.global_variables_initializer() ##  Define Initialization function for variables/ops
+
+        ##########
+        ## define and cache the session
+        ##########
+        sess = tf.Session();
+        sess.run(init);
+
+        self.graph = dict({
+            "x": x,
+            "y": y,
+            "weights": weights,
+            "biases": biases,
+            "pred": pred,
+            "cost": cost,
+            "train_step": train_step,
+            "session" : sess,
+        })
+        return True;
+
+
+
+    def predict(self, features):
+        return False; ## TODO - just return the pred graph
+
+    def test(self, labels, features):
+        cost = self.graph["cost"];
+        x = self.graph["x"];
+        y = self.graph["y"];
+        sess = self.graph["session"];
+
+        print("RMSE for test data :", end = '');
+        final_cost_found = sess.run(cost, feed_dict={x: features, y : labels});
+        print (final_cost_found);
+
 
 
     def train(self, labels, features, epochs = 100, njobs = 1):
         ###################################
-        # Build Graph
+        # Build Graph and Initialize Session
         ###################################
         feature_count = features.shape[1];
         label_count = labels.shape[1] if len(labels.shape) > 1 else 1;
-        x,y,weights,biases,pred,cost,train_step = self.build_graph(label_count, feature_count); ## build the graph and return the components
-        init = tf.global_variables_initializer() ##  Define Initialization function for variables/ops
+        self.build_graph_and_start_session(label_count, feature_count);
 
         ###################################
         # define data handler
         ###################################
         training_data_handler = Batch_and_Shuffler(labels, features);
 
-        ###################################
-        ## Train and Classify
-        ###################################
-        init = tf.global_variables_initializer() ##  define Initialization function for variables/ops
-        with tf.Session() as sess:
-            sess.run(init);
+        #################################################################
+        ## Train Model
+        #################################################################
+        cost = self.graph["cost"];
+        train_step = self.graph["train_step"];
+        x = self.graph["x"];
+        y = self.graph["y"];
+        sess = self.graph["session"];
 
-            #################################################################
-            ## Train Model
-            #################################################################
-            # Start populating the filename queue.
-            coord = tf.train.Coordinator()
-            threads = tf.train.start_queue_runners(coord=coord)
+        display_ratio = 200;
 
-            display_ratio = 200;
+        for i in range(epochs):
+            batch_labels, batch_features = training_data_handler.get_new_batch(batch_size = 2000);
 
-            for i in range(epochs):
-                batch_labels, batch_features = training_data_handler.get_new_batch(batch_size = 2000);
+            if(i == 0):
+                start_time = time.time()
+                print ('Init Cost : ', end = '');
+                print (sess.run(cost, feed_dict={x: batch_features, y : batch_labels}));
 
-                if(i == 0):
-                    start_time = time.time()
-                    print ('Init Cost : ', end = '');
-                    print (sess.run(cost, feed_dict={x: batch_features, y : batch_labels}));
+            if(i % (epochs/display_ratio) == 0 and i != 0):
+                end_time = time.time();
+                print ('Epoch %6d' % i, end = '');
 
-                if(i % (epochs/display_ratio) == 0 and i != 0):
-                    end_time = time.time();
-                    print ('Epoch %6d' % i, end = '');
+                print(' ... cost : ', end = '');
+                this_cost = (sess.run(cost, feed_dict={x: batch_features, y : batch_labels}));
+                print ('%10f' % this_cost, end = '');
 
-                    print(' ... cost : ', end = '');
-                    this_cost = (sess.run(cost, feed_dict={x: batch_features, y : batch_labels}));
-                    print ('%10f' % this_cost, end = '');
+                print (',  = RMSE  : ', end = '');
 
-                    print (',  = RMSE  : ', end = '');
-                    #this_acc = (sess.run(accuracy, feed_dict={x: batch_features, y : batch_labels}));
-                    #print ('%10f' % this_acc, end = '');
+                print (',  dt : ', end = '');
+                delta_t = end_time - start_time;
+                print ('%10f' % delta_t, end = '');
 
-                    #print(' - lr : ', end = '');
-                    #print ('%10f' % sess.run(learning_rate), end = '');
+                print('');
 
-                    print (',  dt : ', end = '');
-                    delta_t = end_time - start_time;
-                    print ('%10f' % delta_t, end = '');
+                #print("Pred -vs- Label:");
+                #print(sess.run(pred[0:10],  feed_dict={x: batch_feature, y : batch_label}));
+                #print(batch_label[0:10]);
 
-                    print('');
+                start_time = time.time()
 
-                    #print("Pred -vs- Label:");
-                    #print(sess.run(pred[0:10],  feed_dict={x: batch_feature, y : batch_label}));
-                    #print(batch_label[0:10]);
+            sess.run(train_step, feed_dict={x: batch_features, y : batch_labels})
 
-                    start_time = time.time()
-
-                sess.run(train_step, feed_dict={x: batch_features, y : batch_labels})
-
-            '''
-            print ('Final Cost : ', end = '');
-            final_cost_found = sess.run(cost, feed_dict={x: batch_feature, y : batch_label});
-            print (final_cost_found);
-            print ('Final Learning Rate : ', end = '');
-            #print (sess.run(learning_rate));
-            sumacc = 0;
-            for i in range(10):
-                batch_feature, batch_label, batch_key = load_data.return_regular_batch([TRAIN_SOURCE], batch_size);
-                predictions = (sess.run(perc_pred, feed_dict={x: batch_feature, y : batch_label}))
-                max_predictions = (sess.run(max_pred, feed_dict={x: batch_feature, y : batch_label}))
-                acc = (sess.run(accuracy, feed_dict={x: batch_feature, y : batch_label}))
-                ## print(acc);
-                sumacc += acc;
-            sumacc = sumacc/10;
-            print ('Average Acc : ', end = '');
-            print (sumacc);
-            '''
-
-            coord.request_stop()
-            coord.join(threads)
+        print ('Final Cost : ', end = '');
+        batch_labels, batch_features = training_data_handler.get_all();
+        final_cost_found = sess.run(cost, feed_dict={x: batch_features, y : batch_labels});
+        print (final_cost_found);
 
 
 
@@ -246,12 +260,15 @@ def main(source_file, n_jobs, n_hidden_1, n_hidden_2, epochs):
     test_labels = labels[train_count:];
     train_features = features[:train_count];
     test_features = features[train_count:];
-
     print(epochs);
 
-    print("training model on features...");
+    print("training model on training data...");
     model = Neural_Network_Model(n_hidden_2, n_hidden_1)
-    model.train(train_labels, train_features, epochs = 100);
+    model.train(train_labels, train_features, epochs = epochs);
+
+    print("evaluating model on test data...")
+    print(test_labels.shape)
+    model.test(test_labels, test_features);
 
 
 if __name__ == '__main__':
