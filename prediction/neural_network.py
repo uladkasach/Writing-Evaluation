@@ -249,6 +249,9 @@ def main(source_file, n_jobs, n_hidden_1, n_hidden_2, epochs):
     ## load data
     print("loading data...");
     labels, features = load_data(source_file);
+    data_manager = Batch_and_Shuffler(labels, features);
+    data_manager.shuffle_data(); ## shuffle data 
+    labels, features = data_manager.get_all();
     labels = np.array(labels);
     features = np.array(features);
     total_count = len(labels);
