@@ -169,6 +169,7 @@ class Neural_Network_Model:
         sess = self.graph["session"];
 
         display_ratio = 200;
+        costs = [];
 
         for i in range(epochs):
             batch_labels, batch_features = training_data_handler.get_new_batch(batch_size = 2000);
@@ -185,6 +186,7 @@ class Neural_Network_Model:
                 print(' ... cost : ', end = '');
                 this_cost = (sess.run(cost, feed_dict={x: batch_features, y : batch_labels}));
                 print ('%10f' % this_cost, end = '');
+                costs.append(this_cost);
 
                 print (',  = RMSE  : ', end = '');
 
@@ -206,6 +208,9 @@ class Neural_Network_Model:
         batch_labels, batch_features = training_data_handler.get_all();
         final_cost_found = sess.run(cost, feed_dict={x: batch_features, y : batch_labels});
         print (final_cost_found);
+        costs_to_consider = int(0.05*epochs);
+        if(costs_to_consider < 20): costs_to_consider = 20;
+        print ('Last ' + str(costs_to_consider) + ' costs standard deviation : ', np.std(costs[-1*costs_to_consider:]));
 
 
 
@@ -244,13 +249,15 @@ def main(source_file, n_jobs, n_hidden_1, n_hidden_2, epochs):
     if(n_hidden_2 is None): n_hidden_2 = 1;
     if(epochs is None): epochs = 10;
 
+    if(n_jobs != 1): print("WARNING - N_JOBS HAS NO EFFECT YET");
+
     base_file_name = ".".join(source_file.split("/")[-1].split(".")[:-1]); # retreive file name w/o extension
 
     ## load data
     print("loading data...");
     labels, features = load_data(source_file);
     data_manager = Batch_and_Shuffler(labels, features);
-    data_manager.shuffle_data(); ## shuffle data 
+    data_manager.shuffle_data(); ## shuffle data
     labels, features = data_manager.get_all();
     labels = np.array(labels);
     features = np.array(features);
@@ -270,7 +277,13 @@ def main(source_file, n_jobs, n_hidden_1, n_hidden_2, epochs):
     model.train(train_labels, train_features, epochs = epochs);
 
     print("evaluating model on test data...")
-    print(test_labels.shape)
+    test_properties = (dict({
+        "source_file": source_file,
+        "n_hidden_1": n_hidden_1,
+        "n_hidden_2": n_hidden_2,
+        "epochs": epochs,
+    }));
+    print (json.dumps(test_properties, indent=2))
     model.test(test_labels, test_features);
 
 
