@@ -28,7 +28,7 @@ def load_sentences(input_loc, dev_limit = -1, cache_path='.cache/essay_vectoriza
         reader = csv.reader(f)
         for i, line in enumerate(reader):
             #if(i > 1000): break;
-            # header line - ['sent_id', 'essay_id', 'score', ...features...]
+            # header line - ['sent_id', 'essay_id', 'essay_set', 'score', ...features...]
             this_sent = dict({
                 "sentence_id" : line[0],
                 "essay_id": line[1],
@@ -43,6 +43,55 @@ def load_sentences(input_loc, dev_limit = -1, cache_path='.cache/essay_vectoriza
     #with open(cache_path, 'wb+') as handle:
     #    pickle.dump(data_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return data_list;
+
+
+
+
+def load_clusters_mapped_by_sentence_id(input_loc, dev_limit = -1):
+    clusters_mapped_by_sentence_id = dict();
+    max_cluster_number = 0;
+    with open(input_loc, "rb") as f:
+        reader = csv.reader(f)
+        for i, line in enumerate(reader):
+            #if(i > 1000): break;
+            # header line - ['sent_id', 'essay_id', 'essay_set', 'score', 'cluster']
+            sentence_id = line[0];
+            cluster_id = line[4];
+            clusters_mapped_by_sentence_id[sentence_id] = int(cluster_id);
+            if(int(cluster_id) > max_cluster_number):
+                max_cluster_number = int(cluster_id);
+            if(i % 1000 == 0): print("reading cluster line " + str(i))
+            if(i == dev_limit): break;
+    cluster_count = max_cluster_number + 1;
+    print("Total clusters found : " + str(cluster_count));
+    return clusters_mapped_by_sentence_id, cluster_count;
+
+def generate_vectors_with_k_sparce(sentences, clusters_mapped_by_sentence_id, cluster_count):
+    # purpose: generate vector for each essay by counting how many times each essay's constituent sentences appeared in each cluster ("bag of clusters")
+    # method : create vector for each essay on the fly in a dict and add up each time a sentence cluster is seen
+    # return : [dict(essay_id, score, features)...]
+
+    aggregation_dict = dict();
+    for sentence in sentences:
+        essay_id = sentence["essay_id"]
+        if(essay_id not in aggregation_dict):
+            aggregation_dict[essay_id] = dict({
+                "essay_id" : essay_id,
+                "essay_set" : sentence["essay_set"],
+                "score" : sentence["score"],
+                "features" : np.zeros(cluster_count),
+            })
+        cluster_number = clusters_mapped_by_sentence_id[sentence["sentence_id"]];
+        aggregation_dict[essay_id]["features"][cluster_number] += 1; ## increment count of that cluster number
+
+    ## build list of essays
+    essays = [];
+    for key, essay in aggregation_dict.iteritems():
+        essays.append(essay);
+
+    #print(essays);
+    return essays;
+
 
 def generate_vectors_with_mean(sentences):
     # purpose: generate vector for each essay by method of averaging sentences
@@ -85,6 +134,7 @@ def record_essay_vectors(essays, base_file_name):
             writer.writerow(vector);
 
 
+
 @plac.annotations(
     method=("Vectorization Method", 'positional', None, str, ['mean', 'k-sparce','k-dense']), # (1), (2), (3) from beginning of this file
     sentence_source_file=("Sentence Vector Source File", 'option', "s", str, None, "<REL_PATH>"),
@@ -95,10 +145,16 @@ def main(method, sentence_source_file, cluster_source_file):
 
     print("loading sentences...");
     sentences = load_sentences(sentence_source_file, dev_limit = -1);
+    if(cluster_source_file is not None):
+        clusters_mapped_by_sentence_id, cluster_count = load_clusters_mapped_by_sentence_id(cluster_source_file);
+
     if(method == "mean"):
         essay_vectors = generate_vectors_with_mean(sentences);
+    elif(method == "k-sparce"):
+        assert(cluster_source_file is not None);
+        essay_vectors = generate_vectors_with_k_sparce(sentences, clusters_mapped_by_sentence_id, cluster_count);
 
-    record_essay_vectors(essay_vectors, base_file_name);
+    record_essay_vectors(essay_vectors, base_file_name + "_" + method);
 
 
 
