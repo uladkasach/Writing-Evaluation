@@ -136,6 +136,7 @@ class Neural_Network_Model:
 
     def test(self, labels, features):
         cost = self.graph["cost"];
+        pred = self.graph["pred"];
         x = self.graph["x"];
         y = self.graph["y"];
         sess = self.graph["session"];
@@ -143,6 +144,10 @@ class Neural_Network_Model:
         print("RMSE for test data :", end = '');
         final_cost_found = sess.run(cost, feed_dict={x: features, y : labels});
         print (final_cost_found);
+
+        pred = sess.run(pred, feed_dict={x: features, y : labels});
+        print(np.column_stack((np.array(pred), np.array(labels)))[np.random.randint(pred.shape[0], size=50), :]); ## dirsplay randome 100 rows
+
 
 
 
@@ -213,7 +218,6 @@ class Neural_Network_Model:
         print ('Last ' + str(costs_to_consider) + ' costs standard deviation : ', np.std(costs[-1*costs_to_consider:]));
 
 
-
 def load_data(source_file):
     ## read all lines
     features = [];
@@ -223,8 +227,8 @@ def load_data(source_file):
         reader = csv.reader(f)
         for i, line in enumerate(reader):
             #if(i>10000): break;
-            these_features = line[3:]; ## 3 labels, rest is features
-            this_label = [line[2]]; ## score
+            these_features = [float(ele) for ele in line[3:]]; ## 3 labels, rest is features
+            this_label = [float(line[2])]; ## score
             #print(this_label);
             #print(these_features);
             features.append(these_features);
@@ -232,8 +236,6 @@ def load_data(source_file):
             if(i % 1000 == 0): print("reading line " + str(i))
             #if(i>1000): break;
     return labels, features;
-
-
 
 @plac.annotations(
     source_file=("Path to source file"),
@@ -253,18 +255,25 @@ def main(source_file, n_jobs, n_hidden_1, n_hidden_2, epochs):
 
     base_file_name = ".".join(source_file.split("/")[-1].split(".")[:-1]); # retreive file name w/o extension
 
-    ## load data
-    print("loading data...");
-    labels, features = load_data(source_file);
-    data_manager = Batch_and_Shuffler(labels, features);
-    data_manager.shuffle_data(); ## shuffle data
-    labels, features = data_manager.get_all();
-    labels = np.array(labels);
-    features = np.array(features);
-    total_count = len(labels);
+    if(False):
+        ## load data
+        print("loading data...");
+        labels, features = load_data(source_file);
+        data_manager = Batch_and_Shuffler(labels, features);
+        data_manager.shuffle_data(); ## shuffle data
+        labels, features = data_manager.get_all();
+        labels = np.array(labels);
+        features = np.array(features);
+    else:
+        x = np.arange(0, 5, 0.01);
+        x = x.reshape(x.shape[0], 1);
+        y = x**2/2;
+        labels = y;
+        features = x;
 
     ## split data naively
     print("splitting data into test and train...");
+    total_count = len(labels);
     train_count = int(total_count*3/float(4));
     train_labels = labels[:train_count];
     test_labels = labels[train_count:];
