@@ -30,7 +30,20 @@ evaluating model on test data...
 RMSE: 0.274493037923
 ```
 
-
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_essay_set_all-average-sense2vec_k-dense.csv"
+}
+RMSE: 0.237069211653
+```
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_semantic_vectors_of_set_all-average-sense2vec_k-dense.csv"
+}
+RMSE: 0.242003802311
+```
 #### example predictions
 ```
 

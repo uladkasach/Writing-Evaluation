@@ -43,8 +43,13 @@ def record_results(sentences, clusters, output_title):
             if(i % 200 == 0): print("writing sentence " + str(i));
             writer.writerow(data);
 
-
-
+def record_centroids(centroids, output_title):
+    ## output data as csv
+    with open("cluster_centroids/"+output_title+".csv", "w+") as file:
+        writer = csv.writer(file);
+        for i, data in enumerate(centroids):
+            if(i % 200 == 0): print("writing centroid " + str(i));
+            writer.writerow(data);
 
 
 @plac.annotations(
@@ -63,11 +68,14 @@ def main(source_file, n_clusters, n_jobs):
     features = reduce_to_feature_data(sentences);
 
     print("clustering...");
-    clusters = KMeans(n_clusters=n_clusters, n_jobs=int(n_jobs)).fit_predict(features);
+    classifier = KMeans(n_clusters=n_clusters, n_jobs=int(n_jobs))
+    clusters = classifier.fit_predict(features);
+    centroids = classifier.cluster_centers_
 
     print("saving results...");
-    record_results(sentences, clusters, base_file_name + "_n"+str(n_clusters)+"_"+str(datetime.datetime.now().strftime("%Y.%m.%d.%H.%M"))); ## note, timestamp included in file name so that we can have multiple results for the same n_clusters and the same file. kmeans results vary each time.
-
+    file_name = base_file_name + "_n"+str(n_clusters)+"_"+str(datetime.datetime.now().strftime("%Y.%m.%d.%H.%M"));
+    record_results(sentences, clusters, file_name); ## note, timestamp included in file name so that we can have multiple results for the same n_clusters and the same file. kmeans results vary each time.
+    record_centroids(centroids, file_name);
 
 
 
