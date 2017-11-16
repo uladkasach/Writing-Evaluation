@@ -64,6 +64,7 @@ def extract_sentence_information(sentence, chosen_list = "ALL", embeddings_choic
         "across_punctuation_similarities":False,
         "parse_tree" : False,
         "semantic" : False,
+        "basic" : False, # note, basic can be toggled but because it is so "un"costly its just always provided atm
     });
     if (chosen_list == "ALL"):
         for key in compute_options.keys():
@@ -164,7 +165,7 @@ def compute_average_word_vector(sentence, normalize=True):
 
     if(normalize):
         average = average / (np.dot(average, average));
-        
+
     average = average.tolist();
 
 
@@ -333,6 +334,7 @@ def normalize_information_list(info):
     return data;
 
 def calculate_backscaled_nth_order_similarities(order, sentence):
+    ## n_th order similarities but w/ "normalization" by previous vector
     similarities = [];
     for i in range(len(sentence)):
         this_index = i;

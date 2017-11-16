@@ -15,7 +15,7 @@ def similarity_between_words(word_a, word_b):
 
     vec_a = get_vector_for(word_a);
     vec_b = get_vector_for(word_b);
-    if(vec_a == False or vec_b == False): return False;
+    if((type(vec_a) == bool and vec_a == False) or (type(vec_b) == bool and vec_b == False)): return False;
 
     similarity =  model.data.similarity(vec_a, vec_b);
     #print(word_a + " dot " + word_b + " = " + str(similarity));
