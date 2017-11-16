@@ -51,3 +51,4 @@ Before testing the vectors the features were analyzed to see whether the values 
 - learn features for each type of essay (good, bad, neutral) individually
     - paper 1 (wordvector autoencoder)
     - autoencoder of other features
+- attempt to understand why clusters for lsa are more seperated in terms of score than semantic clusters but still perform equally or worse. See https://github.com/uladkasach/Writing-Evaluation/issues/39#issuecomment-344960505

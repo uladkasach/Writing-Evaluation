@@ -26,11 +26,26 @@ evaluating model on test data...
 RMSE: 0.234896857249
 
 
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l125_k-sparce.csv"
+}
+RMSE: 0.247029015455
+
+
+
 evaluating model on test data...
 {
   "source_file": "inputs/essay_lsa_essay_set_all_l300_k-dense.csv"
 }
 RMSE: 0.237282815215
+
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l300_k-sparce.csv"
+}
+RMSE: 0.244882918976
+
 
 ```
 evaluating model on test data...
