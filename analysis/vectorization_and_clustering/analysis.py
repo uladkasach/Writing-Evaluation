@@ -124,7 +124,7 @@ def main(source_file):
     rndperm = np.random.permutation(df.shape[0]); ## create list of indicies in random order, use df(rndperm[:50]) to get random 50 sentences);
     print(len(rndperm));
 
-    if(False):
+    if(True):
         print("draw histogram of scores...");
         conduct_histogram_of_scores(df, "score_histogram-"+base_file_name);
 

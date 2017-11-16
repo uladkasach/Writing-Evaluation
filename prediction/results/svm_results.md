@@ -1,6 +1,40 @@
 ```
 evaluating model on test data...
 {
+  "source_file": "inputs/essay_lsa_essay_set_all_l300_mean.csv"
+}
+RMSE: 0.242483514483
+```
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l125_mean.csv"
+}
+RMSE: 0.252645503196
+
+
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l125_k-dense.csv"
+}
+RMSE: 0.239518023371
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l125_k-dense.csv"
+}
+RMSE: 0.234896857249
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_essay_set_all_l300_k-dense.csv"
+}
+RMSE: 0.237282815215
+
+```
+evaluating model on test data...
+{
   "source_file": "inputs/essay_essay_set_all-average-sense2vec_mean.csv"
 }
 

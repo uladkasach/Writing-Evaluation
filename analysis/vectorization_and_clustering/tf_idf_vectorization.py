@@ -47,7 +47,8 @@ def main(source_file, lsa_size):
     base_file_name = ".".join(source_file.split("/")[-1].split(".")[:-1]); # retreive file name w/o extension
     if(lsa_size is None):
         print("For now, we must conduct LSA as we have not defined an efficient way to method to record a 13k by 38k matrix")
-
+        exit();
+         
     ## load fragments
     print("loading fragments...");
     dataset = load_fragments(source_file);
