@@ -1,6 +1,141 @@
 ```
 evaluating model on test data...
 {
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l125_mean.csv"
+}
+RMSE: 0.2439720274
+RMSE: 0.244688329547
+RMSE: 0.243914030744
+RMSE: 0.245513565689
+
+
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l125_k-sparce.csv"
+}
+RMSE: 0.275835273347
+RMSE: 0.276228482167
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l125_k-dense.csv"
+}
+RMSE: 0.23445055423
+RMSE: 0.2390576767
+RMSE: 0.232838954515
+
+
+
+```
+################
+
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l300_mean.csv"
+}
+RMSE: 0.238179056788
+RMSE: 0.238259405247
+RMSE: 0.237541426437
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l300_k-sparce.csv"
+}
+RMSE: 0.277762138553
+RMSE: 0.275513362579
+RMSE: 0.276313572877
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_lsa_sentences_of_set_all_l300_k-dense.csv"
+}
+RMSE: 0.236453006343
+RMSE: 0.238883752881
+RMSE: 0.239631825914
+
+
+
+
+```
+
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_mean.csv"
+}
+RMSE: 0.253614992851
+RMSE: 0.257984302325
+RMSE: 0.251726458652
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_k-sparce.csv"
+}
+RMSE: 0.259857277245
+RMSE: 0.266289810774
+RMSE: 0.261910351039
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_k-dense.csv"
+}
+RMSE: 0.26223213087
+RMSE: 0.255436297569
+RMSE: 0.256490634866
+RMSE: 0.263572831498
+
+
+```
+####################
+###
+###################
+```
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_mean.csv"
+}
+RMSE: 0.250517268123
+RMSE: 0.256173349066
+RMSE: 0.25918844893
+
+
+
+evaluating model on test data...
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_k-sparce.csv"
+}
+RMSE: 0.261271411707
+RMSE: 0.260773294644
+RMSE: 0.260483887911
+
+{
+  "source_file": "inputs/essay_sentences_of_set_all-SIM_PUNCT_LEN_PARSE-MEAN_STDEV_k-dense.csv"
+}
+RMSE: 0.25909233158
+RMSE: 0.258794614707
+RMSE: 0.261587879862
+
+
+
+
+
+```
+
+
+####################
+###
+###################
+
+
+```
+evaluating model on test data...
+{
   "source_file": "inputs/essay_lsa_essay_set_all_l300_mean.csv"
 }
 RMSE: 0.242483514483

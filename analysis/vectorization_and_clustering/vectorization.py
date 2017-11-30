@@ -144,7 +144,7 @@ def main(source_file):
     metrics_to_include=["SIM","PUNCT","LEN", "PARSE"];
 
     ## load fragments
-    fragments = load_fragments("inputs/sentences_of_set_all.csv");
+    fragments = load_fragments(source_file);
 
     ## generate vectors for each fragment
     vectors = build_vectors(fragments, vectorization_data_types, metrics_to_include);
