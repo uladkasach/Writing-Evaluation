@@ -18,3 +18,4 @@
 2. evaluate question 1
     - include as inputs the handcrafted features throughout different areas of the pipeline
 3. evaluate question 2
+    - initialize the lookup table with GoogleNews word vectors, monitor time improvement as well.
