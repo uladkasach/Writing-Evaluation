@@ -6,11 +6,9 @@
 '''
 
 
-
-asap_ranges = {
-	0: (0, 60),
+score_ranges_by_essay_set = {
 	1: (2,12),
-	2: (1,6),
+	2: (1,6), # note, this only utilizes the first score domain.
 	3: (0,3),
 	4: (0,3),
 	5: (0,4),
