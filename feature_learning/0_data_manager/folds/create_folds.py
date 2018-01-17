@@ -27,7 +27,7 @@ def load_header_and_data_from_CSV(input_file): ## retreive list of essays and he
             if(i == 0):
                 header_list = line;
             else:
-                data_list.append(line[:2]);
+                data_list.append(line);
             #if(i>10): break; ## dev artifact
             if(i % 1000 == 0): print("reading line " + str(i))
     return header_list, data_list;
@@ -133,77 +133,3 @@ def main():
 
 if __name__ == "__main__":
     main();
-
-'''
-
-the_data = [];
-the_labels = [];
-f = open(DATA_SOURCE, 'r');
-lines = f.readlines();
-items_per_fold = int(len(lines) / FOLDS);
-
-## create files in which folds will be held
-files = [];
-for i in range(FOLDS):
-    files.append(dict({"test" : open("folds/" + DATA_SOURCE+".fold_"+str(i)+"_test", "w+"), "train" : open("folds/" + DATA_SOURCE+".fold_"+str(i)+"_train", "w+")}));
-for line_index, line in enumerate(lines):
-    if(line.rstrip() == ""): continue;
-    for file_index, a_file in enumerate(files):
-        ## first 50 go in test of fold_1 if items per fold is 50, else go in train
-        #print("new-----");
-        #print("f_i : ", file_index);
-        #print("l_i : ", line_index);
-        #print("l_i = ", line_index, " -> ", np.floor(line_index / items_per_fold) );
-        #line = str(line_index);
-        test_class = int(np.floor(line_index / items_per_fold));
-        #print("test_class : ", test_class);
-        if(test_class == file_index):
-            a_file["test"].write(line);
-        else:
-            a_file["train"].write(line);
-
-f.close();
-#print(the_data);
-#print(len(the_data));
-##print("End loading data...");
-print("End.");
-
-
-def extract_based_on_ids(dataset, id_file):
-	lines = []
-	with open(id_file) as f:
-		for line in f:
-			id = line.strip()
-			try:
-				lines.append(dataset[id])
-			except:
-				print >> sys.stederr, 'ERROR: Invalid ID %s in %s' % (id, id_file)
-	return lines
-
-def create_dataset(lines, output_fname):
-	f_write = open(output_fname, 'w')
-	f_write.write(dataset['header'])
-	for line in lines:
-		f_write.write(line.decode('cp1252', 'replace').encode('utf-8'))
-
-def collect_dataset(input_file):
-	dataset = dict()
-	lcount = 0
-	with open(input_file) as f:
-		for line in f:
-			lcount += 1
-			if lcount == 1:
-				dataset['header'] = line
-				continue
-			parts = line.split('\t')
-			assert len(parts) >= 6, 'ERROR: ' + line
-			dataset[parts[0]] = line
-	return dataset
-
-dataset = collect_dataset(args.input_file)
-for fold_idx in xrange(0, 5):
-	for dataset_type in ['dev', 'test', 'train']:
-		lines = extract_based_on_ids(dataset, 'fold_%d/%s_ids.txt' % (fold_idx, dataset_type))
-		create_dataset(lines, 'processed/fold_%d/%s.tsv' % (fold_idx, dataset_type))
-
-'''
