@@ -251,11 +251,10 @@ def create_data_for_fold(fold_base_path, bool_overwrite_pickle):
         "header" : ["essay_id", "essay_set", "essay_tokens", "raw_score", "normalized_score"],
     })
 
-    return cleaned_data;
+    return cleaned_data, vocab;
 
-def get_data_for_fold(fold_base_path, bool_overwrite_pickle): ## bool_overwrite_pickle enables the automatic cache to be overwritten
-    logger.info('Retreiving cleansed dataset for fold base path ' + fold_base_path);
-
+def get_data_for_fold(fold_base_path, bool_overwrite_pickle, embeddings_type): ## bool_overwrite_pickle enables the automatic cache to be overwritten
+    logger.info('retreiving cleansed dataset for fold base path ' + fold_base_path);
 
     ## evaluate whether or not to create the dataset or just load it from cache
     cleaned_file_name = fold_base_path.replace("/", "__");
@@ -266,16 +265,16 @@ def get_data_for_fold(fold_base_path, bool_overwrite_pickle): ## bool_overwrite_
     else:
         try:
             logger.info('    retreiving cleansed dataset from cache...');
-            cleansed_data = utils.cache.retreive_from_cache(cache_name);
+            cleansed_data, vocab = utils.cache.retreive_from_cache(cache_name);
         except IOError:
             logger.info('    cleansed dataset does not exist in cache...');
             create_dataset = True;
 
     if(create_dataset): ## create the dataset if needed based on previous logic
         logger.info('    creating cleansed dataset...')
-        cleansed_data = create_data_for_fold(fold_base_path, bool_overwrite_pickle);
+        cleansed_data, vocab = create_data_for_fold(fold_base_path, bool_overwrite_pickle);
         logger.info('    caching cleansed dataset....');
-        utils.cache.save_to_cache(cache_name, cleansed_data);
+        utils.cache.save_to_cache(cache_name, [cleansed_data, vocab]);
 
 
-    return cleansed_data;
+    return cleansed_data, vocab;
