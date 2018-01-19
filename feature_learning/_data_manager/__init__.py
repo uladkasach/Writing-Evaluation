@@ -65,7 +65,6 @@ def convert_scores_to(to_what, orig_scores, essay_sets):
     for row in data_matrix:
         orig_score, essay_set = row;
         score = convert_this_score(orig_score, essay_set);
-        logger.debug(score);
         scores.append(score);
 
     ## return data
@@ -136,13 +135,14 @@ def generate_vocab(raw_data, fold_base_path, bool_overwrite_pickle): ## either b
     logger.info('    building vocabulary from training data...');
     options_encoding = hashlib.sha1(json.dumps(text_options_dict, sort_keys=True)).hexdigest()  ## used to encode selected options into filename: ensures that if options are changed we use a cache for that option set
     cleaned_file_name = fold_base_path.replace("/", "__");
+    cache_name = cleaned_file_name + "-" + "vocab"+ "-" + options_encoding;
 
     create_vocab = False; ## evaluate whether or not to create the vocab or just load it from cache
     if(bool_overwrite_pickle):
         create_vocab = True;
     else:
         try:
-            vocab, statistics = utils.cache.retreive_from_cache(cleaned_file_name + "-" + options_encoding);
+            vocab, statistics = utils.cache.retreive_from_cache(cache_name);
         except IOError:
             logger.info('        vocab does not exist in cache...');
             create_vocab = True;
@@ -151,7 +151,7 @@ def generate_vocab(raw_data, fold_base_path, bool_overwrite_pickle): ## either b
         logger.info('        creating vocab...')
         vocab, statistics = build_vocab(raw_data["header"], raw_data["train"], text_options_dict);
         logger.info('        caching vocab....');
-        utils.cache.save_to_cache(cleaned_file_name + "-" + options_encoding, [vocab, statistics]);
+        utils.cache.save_to_cache(cache_name, [vocab, statistics]);
 
     logger.info('        %i total words, %i unique words' % statistics);
     return vocab;
@@ -187,7 +187,11 @@ def cleanse_this_essay(essay_data, header, vocab):
     cleansed_data["essay_tokens"] = tokenized_indicies;
 
     ## 2.b normalize scores
-    raw_score = float(essay_data[header.index("domain1_score")]); ## use domain1_score as score for essay
+    try:
+        raw_score = float(essay_data[header.index("domain1_score")]); ## use domain1_score as score for essay
+    except:
+        logger.warn("     (!) essay (id = "+essay_data[header.index("essay_id")]+") did not have a score and is being skipped.");
+        return False, False; ## some essays are not scored;
     normalized_score = convert_scores_to("norm", raw_score, essay_set);
     cleansed_data["raw_score"] = raw_score;
     cleansed_data["norm_score"] = normalized_score;
@@ -201,21 +205,23 @@ def cleanse_raw_data(dataset, header, vocab, type):
         "total" : 1,
         "num" : 1,
         "unk" : 1,
+        "err" : 1,
     })
     cleansed_data = [];
     for essay_data in dataset:
         this_cleansed_data, these_stats = cleanse_this_essay(essay_data, header, vocab);
+        if(this_cleansed_data == False):
+            stats["err"] += 1;
+            continue; ## this essay was not interpertable.
         cleansed_data.append(this_cleansed_data);
         stats = dict(collections.Counter(stats)+collections.Counter(these_stats)); ## sum stats and these stats by key,  https://stackoverflow.com/a/30950164/3068233
 
-    logger.info('        <num> hit rate: %d (%.2f%%), <unk> hit rate: %d (%.2f%%), of %d' % (stats["num"], 100*stats["num"]/float(stats["total"]), stats["unk"], 100*stats["unk"]/float(stats["total"]), stats["total"]))
+    logger.info('        <num> hit rate: %d (%.2f%%), <unk> hit rate: %d (%.2f%%), err rate: %d (%.2f%%), of %d' % (stats["num"], 100*stats["num"]/float(stats["total"]), stats["unk"], 100*stats["unk"]/float(stats["total"]), stats["err"], 100*stats["err"]/float(stats["total"]), stats["total"]))
 
     return cleansed_data;
 
-def get_data_for_fold(fold_base_path, bool_overwrite_pickle): ## bool_overwrite_pickle enables the automatic cache to be overwritten
-    print("retreive dataset from fold base name " + fold_base_path);
-    logger.info('Retreiving dataset from fold base path ' + fold_base_path);
 
+def create_data_for_fold(fold_base_path, bool_overwrite_pickle):
     ## retreive raw data
     logger.info('    loading raw data...');
     header = "essay_id,essay_set,essay,rater1_domain1,rater2_domain1,rater3_domain1,domain1_score,rater1_domain2,rater2_domain2,domain2_score,rater1_trait1,rater1_trait2,rater1_trait3,rater1_trait4,rater1_trait5,rater1_trait6,rater2_trait1,rater2_trait2,rater2_trait3,rater2_trait4,rater2_trait5,rater2_trait6,rater3_trait1,rater3_trait2,rater3_trait3,rater3_trait4,rater3_trait5,rater3_trait6";
@@ -246,3 +252,30 @@ def get_data_for_fold(fold_base_path, bool_overwrite_pickle): ## bool_overwrite_
     })
 
     return cleaned_data;
+
+def get_data_for_fold(fold_base_path, bool_overwrite_pickle): ## bool_overwrite_pickle enables the automatic cache to be overwritten
+    logger.info('Retreiving cleansed dataset for fold base path ' + fold_base_path);
+
+
+    ## evaluate whether or not to create the dataset or just load it from cache
+    cleaned_file_name = fold_base_path.replace("/", "__");
+    cache_name = cleaned_file_name + "-" + "cleansed_data"; ## name to be used to retreive and store this data in cache
+    create_dataset = False;
+    if(bool_overwrite_pickle):
+        create_dataset = True;
+    else:
+        try:
+            logger.info('    retreiving cleansed dataset from cache...');
+            cleansed_data = utils.cache.retreive_from_cache(cache_name);
+        except IOError:
+            logger.info('    cleansed dataset does not exist in cache...');
+            create_dataset = True;
+
+    if(create_dataset): ## create the dataset if needed based on previous logic
+        logger.info('    creating cleansed dataset...')
+        cleansed_data = create_data_for_fold(fold_base_path, bool_overwrite_pickle);
+        logger.info('    caching cleansed dataset....');
+        utils.cache.save_to_cache(cache_name, cleansed_data);
+
+
+    return cleansed_data;
